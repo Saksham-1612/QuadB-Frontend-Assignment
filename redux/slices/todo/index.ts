@@ -1,36 +1,53 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const loadFromLocalStorage = () => {
+  try {
+    const serializedTodos = localStorage.getItem("todos");
+    if (serializedTodos === null) {
+      return [{ id: 1, text: "Hello", isDone: false }];
+    }
+    return JSON.parse(serializedTodos);
+  } catch (error) {
+    console.error("Failed to load state from local storage:", error);
+    return undefined;
+  }
+};
+
+const saveToLocalStorage = (state) => {
+  try {
+    const serializedTodos = JSON.stringify(state.todos);
+    localStorage.setItem("todos", serializedTodos);
+  } catch (error) {
+    console.error("Failed to save state to local storage:", error);
+  }
+};
+
 export const todoSlice = createSlice({
-  initialState: {
-    todos: [{ id: 1, text: "Hello", isDone: false }],
-  },
   name: "todo slice",
+  initialState: {
+    todos: loadFromLocalStorage() || [{ id: 1, text: "Hello", isDone: false }],
+  },
   reducers: {
-    createTodo: (state, actions) => {
+    createTodo: (state, action) => {
       const todo = {
         id: Math.random(),
-        text: actions.payload.text,
-        isDone: actions.payload.isDone,
+        text: action.payload.text,
+        isDone: action.payload.isDone || false,
       };
-      console.log(todo);
       state.todos.push(todo);
+      saveToLocalStorage(state);
     },
-    removeTodo: (state, actions) => {
-      state.todos = state.todos.filter(
-        (todo) => todo.id !== actions.payload.id
-      );
+    removeTodo: (state, action) => {
+      state.todos = state.todos.filter((todo) => todo.id !== action.payload.id);
+      saveToLocalStorage(state);
     },
     updateTodo: (state, action) => {
-      const { id, updatedTodo } = action.payload;
-      console.log(updatedTodo);
-      const existingTodoIndex = state.todos.findIndex((todo) => todo.id === id);
-      console.log(existingTodoIndex);
-
-      if (existingTodoIndex !== -1) {
-        state.todos[existingTodoIndex] = {
-          ...state.todos[existingTodoIndex],
-          ...updatedTodo,
-        };
+      const { id, text, isDone } = action.payload;
+      const existingTodo = state.todos.find((todo) => todo.id === id);
+      if (existingTodo) {
+        if (text !== undefined) existingTodo.text = text;
+        if (isDone !== undefined) existingTodo.isDone = isDone;
+        saveToLocalStorage(state);
       }
     },
   },
