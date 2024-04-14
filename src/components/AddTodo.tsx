@@ -11,7 +11,7 @@ const AddTodo = () => {
     e.preventDefault();
     console.log(done, text);
 
-    dispatch(createTodo({ text, done })); // Pass text and done as an object
+    dispatch(createTodo({ text })); // Pass text and done as an object
     setText(""); // Clear the input after adding a todo
     setDone(false);
   };
